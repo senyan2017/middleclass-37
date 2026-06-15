@@ -84,6 +84,7 @@ local function _createClass(name, super)
 
   local aClass = { name = name, super = super, static = {},
                    __instanceDict = dict, __declaredMethods = {},
+                   __includedMixins = {},
                    subclasses = setmetatable({}, {__mode='k'})  }
 
   if super then
@@ -108,6 +109,9 @@ end
 
 local function _includeMixin(aClass, mixin)
   assert(type(mixin) == 'table', "mixin must be a table")
+
+  if aClass.__includedMixins[mixin] then return aClass end
+  aClass.__includedMixins[mixin] = true
 
   for name,method in pairs(mixin) do
     if name ~= "included" and name ~= "static" then aClass[name] = method end

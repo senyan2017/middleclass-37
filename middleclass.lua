@@ -84,6 +84,7 @@ local function _createClass(name, super)
 
   local aClass = { name = name, super = super, static = {},
                    __instanceDict = dict, __declaredMethods = {},
+                   __mixins = {},
                    subclasses = setmetatable({}, {__mode='k'})  }
 
   if super then
@@ -115,6 +116,10 @@ local function _includeMixin(aClass, mixin)
 
   for name,method in pairs(mixin.static or {}) do
     aClass.static[name] = method
+  end
+
+  if mixin ~= DefaultMixin then
+    aClass.__mixins[mixin] = true
   end
 
   if type(mixin.included)=="function" then mixin:included(aClass) end
@@ -173,6 +178,20 @@ local DefaultMixin = {
       return type(other)      == 'table' and
              type(self.super) == 'table' and
              ( self.super == other or self.super:isSubclassOf(other) )
+    end,
+
+    includesMixin = function(self, mixin)
+      return type(mixin) == 'table'
+         and (self.__mixins[mixin] == true
+              or (type(self.super) == 'table'
+                  and type(self.super.includesMixin) == 'function'
+                  and self.super:includesMixin(mixin)))
+    end,
+
+    mixins = function(self)
+      local result = {}
+      for mixin in pairs(self.__mixins) do result[#result + 1] = mixin end
+      return result
     end,
 
     include = function(self, ...)
